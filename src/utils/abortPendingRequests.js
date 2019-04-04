@@ -6,9 +6,10 @@ export const abortPendingRequests = ({ requestsStack, axiosInstance }) => {
     // make sure the url is same for both request and response
     const url = config.url.replace(config.baseURL, '/');
     // stringify whole RESTful request with URL params
-    const flagUrl = url + '&' + config.method + '&' + JSON.stringify(config.params);
+    const flagUrl = url + '&' + config.method;
     if (flagUrl in requestsStack) {
       if (cancelRequest) {
+        console.log('canceled request');
         cancelRequest(); // abort the request
       } else {
         delete requestsStack[flagUrl];

@@ -1360,7 +1360,11 @@ var prepareEndpointUrl = function prepareEndpointUrl(endpoint) {
   })) {
     return endpoint;
   } else {
-    return RequestConfig.baseURL || '' + endpoint;
+    if (RequestConfig.baseURL === null) {
+      return endpoint;
+    }
+
+    return RequestConfig.baseURL + endpoint;
   }
 };
 
@@ -1513,7 +1517,7 @@ var abortPendingRequests = function abortPendingRequests(_ref) {
     // make sure the url is same for both request and response
     var url = config.url.replace(config.baseURL, '/');
     // stringify whole RESTful request with URL params
-    var flagUrl = url + '&' + config.method + '&' + JSON.stringify(config.params);
+    var flagUrl = url + '&' + config.method;
     if (flagUrl in requestsStack) {
       if (cancelRequest) {
         cancelRequest(); // abort the request
