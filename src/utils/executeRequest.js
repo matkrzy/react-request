@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import { RequestConfig } from '../config/request-config';
-import { prepareAction, dispatchReduxAction } from './index';
+import { prepareAction, dispatchReduxAction, abortPendingRequests } from './index';
 
 export const executeRequest = ({
   axiosInstance,
@@ -13,6 +13,7 @@ export const executeRequest = ({
   params: paramsFromProps = {},
   reduxActionTypes,
   setState,
+  requestsStack,
 }) => ({ params, data } = {}) => {
   //set request params
   axiosInstance.defaults.params = {
@@ -25,6 +26,9 @@ export const executeRequest = ({
     ...(data ? data : {}),
     ...(dataFromProps ? dataFromProps : {}),
   };
+
+  //configure axios dupicated requests
+  abortPendingRequests({ axiosInstance, requestsStack });
 
   setState(prev => ({ ...prev, isLoading: true }));
 

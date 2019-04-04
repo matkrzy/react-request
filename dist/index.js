@@ -1398,7 +1398,8 @@ var executeRequest$$1 = function executeRequest$$1(_ref) {
       _ref$params = _ref.params,
       paramsFromProps = _ref$params === undefined ? {} : _ref$params,
       reduxActionTypes = _ref.reduxActionTypes,
-      setState = _ref.setState;
+      setState = _ref.setState,
+      requestsStack = _ref.requestsStack;
   return function () {
     var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
         params = _ref2.params,
@@ -1409,6 +1410,9 @@ var executeRequest$$1 = function executeRequest$$1(_ref) {
 
     //set request body
     axiosInstance.defaults.data = _extends({}, data ? data : {}, dataFromProps ? dataFromProps : {});
+
+    //configure axios dupicated requests
+    abortPendingRequests({ axiosInstance: axiosInstance, requestsStack: requestsStack });
 
     setState(function (prev) {
       return _extends({}, prev, { isLoading: true });
@@ -1507,6 +1511,57 @@ var createAxiosInstance = function createAxiosInstance(_ref) {
   return { axiosInstance: instance, cancelRequest: cancelRequest };
 };
 
+var abortPendingRequests = function abortPendingRequests(_ref) {
+  var requestsStack = _ref.requestsStack,
+      axiosInstance = _ref.axiosInstance;
+
+  var CancelToken = axios.CancelToken;
+  var removePending = function removePending(config, cancelRequest) {
+    // make sure the url is same for both request and response
+    var url = config.url.replace(config.baseURL, '/');
+    // stringify whole RESTful request with URL params
+    var flagUrl = url + '&' + config.method + '&' + JSON.stringify(config.params);
+    if (flagUrl in requestsStack) {
+      if (cancelRequest) {
+        cancelRequest(); // abort the request
+      } else {
+        delete requestsStack[flagUrl];
+      }
+    } else {
+      if (cancelRequest) {
+        requestsStack[flagUrl] = cancelRequest; // store the cancel function
+      }
+    }
+  };
+
+  // axios interceptors
+  axiosInstance.interceptors.request.use(function (config) {
+    // you can apply cancel token to all or specific requests
+    // e.g. except config.method == 'options'
+    config.cancelToken = new CancelToken(function (c) {
+      removePending(config, c);
+    });
+
+    return config;
+  }, function (error) {
+    Promise.reject(error);
+  });
+
+  axiosInstance.interceptors.response.use(function (response) {
+    removePending(response.config);
+    return response;
+  }, function (error) {
+    removePending(error.config);
+
+    if (!axios.isCancel(error)) {
+      return Promise.reject(error);
+    } else {
+      // return empty object for aborted request
+      return Promise.resolve({});
+    }
+  });
+};
+
 var useRequest = function useRequest(configuration) {
   var _configuration$abortO = configuration.abortOnUnmount,
       abortOnUnmount = _configuration$abortO === undefined ? true : _configuration$abortO,
@@ -1537,6 +1592,8 @@ var useRequest = function useRequest(configuration) {
 
 
   var isMounted = React.useRef(false);
+  //request stack for abort request
+  var requestsStack = {};
 
   //create new instance of axios
 
@@ -1554,7 +1611,8 @@ var useRequest = function useRequest(configuration) {
     onSuccess: onSuccess,
     params: params,
     reduxActionTypes: reduxActionTypes,
-    setState: setState
+    setState: setState,
+    requestsStack: requestsStack
   });
 
   //function for update data key

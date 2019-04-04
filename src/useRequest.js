@@ -22,6 +22,9 @@ export const useRequest = configuration => {
   const [state, setState] = useState({ isLoading: false, isSuccess: false, isFailed: false });
   //isMounted flag to skip first effect on params change
   const isMounted = useRef(false);
+  //request stack for abort request
+  const requestsStack = {};
+
 
   //create new instance of axios
   const { axiosInstance, cancelRequest } = createAxiosInstance({ endpoint, method });
@@ -35,6 +38,7 @@ export const useRequest = configuration => {
     params,
     reduxActionTypes,
     setState,
+    requestsStack
   });
 
   //function for update data key

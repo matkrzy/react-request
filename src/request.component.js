@@ -9,7 +9,7 @@ export const Request = props => {
 
   //configure request hook
   const { state, doRequest, updateData, cancelRequest } = useRequest(configuration);
-
+  
   //renderer props
   const rendererProps = { ...state, doRequest, updateData, cancelRequest };
 

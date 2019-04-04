@@ -31,11 +31,11 @@ export default {
     }),
     resolve(),
     commonjs(),
-    json({
-      include: 'node_modules/**',
-      preferConst: true,
-      indent: '  ',
-      compact: true,
-    }),
+    //json({
+    //  include: 'node_modules/**',
+    //  preferConst: true,
+    //  indent: '  ',
+    //  compact: true,
+    //}),
   ],
 };

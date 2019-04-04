@@ -3,3 +3,4 @@ export * from './prepareAction';
 export * from './executeRequest';
 export * from './dispatchReduxAction';
 export * from './axiosInstance';
+export * from './abortPendingRequests';
