@@ -10,6 +10,10 @@ export const prepareEndpointUrl = endpoint => {
   if (prefixesExcludedFromAPI.some(prefix => endpoint.startsWith(prefix))) {
     return endpoint;
   } else {
-    return RequestConfig.baseURL || '' + endpoint;
+    if (RequestConfig.baseURL === null) {
+      return endpoint;
+    }
+
+    return RequestConfig.baseURL + endpoint;
   }
 };
