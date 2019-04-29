@@ -4,6 +4,8 @@ export const RequestConfig = {
     dataKey: 'data',
     errorKey: 'errors',
     excludedPrefixesFromApi: ['/i18n/', 'http://', 'https://'],
+    onSuccess: undefined,
+    onFailure: undefined,
   },
 
   //headers for request
@@ -41,7 +43,7 @@ export const RequestConfig = {
   set paramsSerializer(serializer) {
     this.config.paramsSerializer = serializer;
   },
-  get stringifyOptions() {
+  get paramsSerializer() {
     return this.config.paramsSerializer;
   },
 
@@ -59,5 +61,21 @@ export const RequestConfig = {
   },
   get errorKey() {
     return this.config.errorKey;
+  },
+
+  //global on success callback
+  set onSuccess(key) {
+    this.config.onSuccess = key;
+  },
+  get onSuccess() {
+    return this.config.onSuccess;
+  },
+
+  //global on failure callback
+  set onSuccess(key) {
+    this.config.onFailure = key;
+  },
+  get onFailure() {
+    return this.config.onFailure;
   },
 };

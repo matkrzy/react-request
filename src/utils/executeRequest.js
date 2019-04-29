@@ -1,10 +1,16 @@
 import axios from 'axios';
 
 import { RequestConfig } from '../config/request-config';
-import { prepareAction, dispatchReduxAction, abortPendingRequests } from './index';
+import { prepareAction, dispatchReduxAction, cancelPendingRequest } from './index';
+import { setLoading, setData, setError } from '../reducer/actions';
+
+const callIfFunction = (fn, params) => {
+  if (fn && typeof fn === 'function') {
+    fn(params);
+  }
+};
 
 export const executeRequest = ({
-  axiosInstance,
   data: dataFromProps = {},
   dataKey = RequestConfig.dataKey,
   errorKey = RequestConfig.errorKey,
@@ -12,25 +18,24 @@ export const executeRequest = ({
   onSuccess,
   params: paramsFromProps = {},
   reduxActionTypes,
-  setState,
-  requestsStack,
+  axiosInstance,
+  cancelLastRequest,
+  dispatch,
 }) => ({ params, data } = {}) => {
   //set request params
   axiosInstance.defaults.params = {
-    ...(params ? params : {}),
     ...(paramsFromProps ? paramsFromProps : {}),
+    ...(params ? params : {}),
   };
 
   //set request body
   axiosInstance.defaults.data = {
-    ...(data ? data : {}),
     ...(dataFromProps ? dataFromProps : {}),
+    ...(data ? data : {}),
   };
 
-  //configure axios dupicated requests
-  abortPendingRequests({ axiosInstance, requestsStack });
-
-  setState(prev => ({ ...prev, isLoading: true }));
+  //set isLoading to true
+  dispatch(setLoading());
 
   //call 1st redux action in array - REQUEST
   if (reduxActionTypes && reduxActionTypes[0]) {
@@ -38,26 +43,33 @@ export const executeRequest = ({
     dispatchReduxAction(prepareAction({ action: reduxActionTypes[0], params }));
   }
 
+  const cancelToken = axios.CancelToken;
   axiosInstance
-    .request()
+    .request({
+      cancelToken: new cancelToken(c => {
+        //save last request to manual cancel;
+        cancelLastRequest.current = c;
+
+        //cancel all pending requests
+        cancelPendingRequest(axiosInstance, c);
+      }),
+    })
     .then(response => {
       const { data } = response;
 
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        isSuccess: true,
-        data: !!dataKey ? data[dataKey] : data,
-      }));
+      //update data
+      dispatch(setData(!!dataKey ? data[dataKey] : data));
 
       //call 2nd redux action in array - SUCCESS
       if (reduxActionTypes && reduxActionTypes[1]) {
         dispatchReduxAction(prepareAction({ action: reduxActionTypes[1], params, data }));
       }
 
-      if (onSuccess && typeof onSuccess === 'function') {
-        onSuccess();
-      }
+      //config on success action
+      callIfFunction(RequestConfig.onSuccess, { params, data });
+
+      //request onSuccess action
+      callIfFunction(onSuccess, { params, data });
     })
     .catch(error => {
       //TODO - add support for error handling
@@ -67,27 +79,23 @@ export const executeRequest = ({
         const errors = (() => {
           if (error.response) {
             const { response } = error;
-            return !!(errorKey && response.data) ? response.data[errorKey] || error : undefined;
+            return !!(errorKey && response.data) ? response.data[errorKey] || response : undefined;
           }
         })();
 
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          isSuccess: false,
-          isFailed: true,
-          errors,
-        }));
+        //set error state
+        dispatch(setError(errors));
 
         //call 3th redux action in array - FAILURE
         if (reduxActionTypes && reduxActionTypes[2]) {
-          // $FlowFixMe
           dispatchReduxAction(prepareAction({ action: reduxActionTypes[2], params }));
         }
 
-        if (onFailure && typeof onFailure === 'function') {
-          onFailure();
-        }
+        //config on success action
+        callIfFunction(RequestConfig.onFailure, { params, data });
+
+        //request onFailure action
+        callIfFunction(onFailure, { params, data });
       }
     });
 };
