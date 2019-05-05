@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 
 export const ConsumerWrapper = props => {
-  const { registerNamespace, unregisterNamespace, updateNamespace, namespace, data } = props;
+  const {registerNamespace, unregisterNamespace, updateNamespace, namespace, data} = props;
 
   useEffect(() => {
     registerNamespace(namespace);
@@ -10,9 +10,8 @@ export const ConsumerWrapper = props => {
   }, []);
 
   useEffect(() => {
-    if (data) {
-      updateNamespace(namespace, data);
-    }
+    updateNamespace(namespace, data);
+
   }, [data]);
 
   return props.children;

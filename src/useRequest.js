@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo, useReducer } from 'react';
 
 import { createAxiosInstance, executeRequest } from './utils';
+import { reducer } from './reducer/reducer';
+import { setData, setCanceled } from './reducer/actions';
 
 export const useRequest = configuration => {
   const {
@@ -18,59 +20,72 @@ export const useRequest = configuration => {
     requestOnParamsChange = true,
   } = configuration;
 
-  //initialize state
-  const [state, setState] = useState({ isLoading: false, isSuccess: false, isFailed: false });
+  //state
+  const [state, dispatch] = useReducer(reducer, { isLoading: false });
   //isMounted flag to skip first effect on params change
   const isMounted = useRef(false);
-  //request stack for abort request
-  const requestsStack = {};
-
+  const cancelLastRequest = useRef();
 
   //create new instance of axios
-  const { axiosInstance, cancelRequest } = createAxiosInstance({ endpoint, method });
+  const axiosInstance = useMemo(() => createAxiosInstance({ endpoint, method }), [endpoint, method]);
 
   //prepare request executor
-  const doRequest = executeRequest({
-    axiosInstance,
-    data,
-    onFailure,
-    onSuccess,
-    params,
-    reduxActionTypes,
-    setState,
-    requestsStack
-  });
+  const doRequest = useMemo(
+    () =>
+      executeRequest({
+        axiosInstance,
+        data,
+        onFailure,
+        onSuccess,
+        params,
+        reduxActionTypes,
+        dispatch,
+        cancelLastRequest,
+      }),
+    [data, params, endpoint, method, cancelLastRequest],
+  );
 
-  //function for update data key
-  const updateData = data => setState(prevState => ({ ...prevState, data }));
+  const cancelRequest = () => {
+    dispatch(setCanceled());
+
+    if (typeof cancelLastRequest.current === 'function') {
+      cancelLastRequest.current();
+    }
+  };
+
+  //On (params || data || endpoint) change
+  useEffect(() => {
+    if (isMounted.current && (requestOnParamsChange || requestOnDataChange || requestOnEndpointChange)) {
+      doRequest();
+    }
+  }, [data, params, endpoint, method]);
 
   //component did mount and component will unmount
   useEffect(() => {
+    if (!isMounted.current) {
+      isMounted.current = true;
+    }
+
     if (requestOnMount) {
       doRequest();
     }
 
     return () => {
+      isMounted.current = false;
+
       if (abortOnUnmount) {
-        return cancelRequest.cancel();
+        return cancelRequest();
       }
     };
   }, []);
 
-  //On (params/data/endpoint) change
-  useEffect(() => {
-    if (!isMounted.current) {
-      isMounted.current = true;
+  //update data action
+  const updateData = data => dispatch(setData(data));
 
-      return;
-    }
-
-    if (requestOnParamsChange || requestOnDataChange || requestOnEndpointChange) {
-      doRequest();
-    }
-
-    return () => (isMounted.current = false);
-  }, [params, endpoint, data]);
-
-  return { state, doRequest, updateData, cancelRequest };
+  return {
+    state,
+    doRequest,
+    updateData,
+    cancelRequest,
+  };
 };

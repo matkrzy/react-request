@@ -5,13 +5,13 @@ import { useRequest } from './useRequest';
 import { RequestContextConsumer } from './context/request-context-consumer';
 
 export const Request = props => {
-  const { component: Component, children, namespace, ...configuration } = props;
+  const { component: Component, children, namespace, componentProps = {}, ...configuration } = props;
 
   //configure request hook
   const { state, doRequest, updateData, cancelRequest } = useRequest(configuration);
-  
+
   //renderer props
-  const rendererProps = { ...state, doRequest, updateData, cancelRequest };
+  const rendererProps = { ...state, doRequest, updateData, cancelRequest, ...componentProps };
 
   //select proper renderer
   const render = () => {

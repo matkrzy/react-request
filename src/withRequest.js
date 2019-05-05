@@ -3,10 +3,12 @@ import React from 'react';
 import { useRequest } from './useRequest';
 import { RequestContextConsumer } from './context';
 
-export const withRequest = ({ namespace, ...configuration }) => WrappedComponent => props => {
-  const { state, doRequest, cancelRequest } = useRequest(configuration);
+export const withRequest = config => WrappedComponent => props => {
+  const { namespace, ...configuration } = typeof config === 'function' ? config(props) : config;
 
-  const componentProps = { ...state, doRequest, cancelRequest, ...props };
+  const { state, doRequest, cancelRequest, updateData } = useRequest(configuration);
+
+  const componentProps = { ...state, doRequest, cancelRequest, updateData, ...props };
 
   if (namespace) {
     return (

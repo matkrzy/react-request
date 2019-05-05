@@ -31,11 +31,12 @@ export default {
     }),
     resolve(),
     commonjs(),
-    //json({
-    //  include: 'node_modules/**',
-    //  preferConst: true,
-    //  indent: '  ',
-    //  compact: true,
-    //}),
+    process.env.NODE_ENV === 'development' &&
+      json({
+        include: 'node_modules/**',
+        preferConst: true,
+        indent: '  ',
+        compact: true,
+      }),
   ],
 };
