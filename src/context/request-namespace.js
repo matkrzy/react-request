@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 import { RequestContext } from './request-context';
 
@@ -8,8 +8,8 @@ export const RequestNamespace = props => {
   return (
     <RequestContext.Consumer>
       {values => {
-        const data = values.state[namespace];
-        
+        const data = values.state[namespace] || {};
+
         return props.children(data);
       }}
     </RequestContext.Consumer>
