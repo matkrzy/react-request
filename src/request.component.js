@@ -8,7 +8,7 @@ export const Request = props => {
   const { component: Component, children, namespace, componentProps = {}, ...configuration } = props;
 
   //configure request hook
-  const { state, doRequest, updateData, cancelRequest } = useRequest(configuration);
+  const { doRequest, updateData, cancelRequest, ...state } = useRequest(configuration);
 
   //renderer props
   const rendererProps = { ...state, doRequest, updateData, cancelRequest, ...componentProps };
@@ -29,7 +29,7 @@ export const Request = props => {
   //applay namespace to context
   if (namespace) {
     return (
-      <RequestContextConsumer namespace={namespace} data={state.data}>
+      <RequestContextConsumer namespace={namespace} data={state} doRequest={doRequest}>
         {render()}
       </RequestContextConsumer>
     );

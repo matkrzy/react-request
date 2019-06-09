@@ -6,6 +6,13 @@ export const RequestConfig = {
     excludedPrefixesFromApi: ['/i18n/', 'http://', 'https://'],
     onSuccess: undefined,
     onFailure: undefined,
+    requestOnDataChange: true,
+    requestOnEndpointChange: true,
+    requestOnMount: true,
+    requestOnParamsChange: true,
+    requestOnMethodChange: true,
+    defaultMethod: 'get',
+    abortOnUnmount: true,
   },
 
   //headers for request
@@ -64,18 +71,67 @@ export const RequestConfig = {
   },
 
   //global on success callback
-  set onSuccess(key) {
-    this.config.onSuccess = key;
+  set onSuccess(callback) {
+    this.config.onSuccess = callback;
   },
   get onSuccess() {
     return this.config.onSuccess;
   },
 
   //global on failure callback
-  set onSuccess(key) {
-    this.config.onFailure = key;
+  set onFailure(callback) {
+    this.config.onFailure = callback;
   },
   get onFailure() {
     return this.config.onFailure;
+  },
+
+  set requestOnDataChange(state) {
+    this.config.requestOnDataChange = state;
+  },
+  get requestOnDataChange() {
+    return this.config.requestOnDataChange;
+  },
+
+  set requestOnEndpointChange(state) {
+    this.config.requestOnEndpointChange = state;
+  },
+  get requestOnEndpointChange() {
+    return this.config.requestOnEndpointChange;
+  },
+
+  set requestOnMount(state) {
+    this.config.requestOnMount = state;
+  },
+  get requestOnMount() {
+    return this.config.requestOnMount;
+  },
+
+  set requestOnParamsChange(state) {
+    this.config.requestOnParamsChange = state;
+  },
+  get requestOnParamsChange() {
+    return this.config.requestOnParamsChange;
+  },
+
+  set requestOnMethodChange(state) {
+    this.config.requestOnMethodChange = state;
+  },
+  get requestOnMethodChange() {
+    return this.config.requestOnMethodChange;
+  },
+
+  set defaultMethod(method) {
+    this.config.defaultMethod = method;
+  },
+  get defaultMethod() {
+    return this.config.defaultMethod;
+  },
+
+  set abortOnUnmount(state) {
+    this.config.abortOnUnmount = state;
+  },
+  get abortOnUnmount() {
+    return this.config.abortOnUnmount;
   },
 };

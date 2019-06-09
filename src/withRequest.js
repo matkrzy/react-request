@@ -6,7 +6,7 @@ import { RequestContextConsumer } from './context';
 export const withRequest = config => WrappedComponent => props => {
   const { namespace, ...configuration } = typeof config === 'function' ? config(props) : config;
 
-  const { state, doRequest, cancelRequest, updateData } = useRequest(configuration);
+  const { doRequest, cancelRequest, updateData, ...state } = useRequest(configuration);
 
   const componentProps = { ...state, doRequest, cancelRequest, updateData, ...props };
 

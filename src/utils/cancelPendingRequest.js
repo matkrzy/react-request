@@ -1,6 +1,3 @@
-//requests cache
-const cache = {};
-
 //generate unique key for request
 const jsonToString = data =>
   Object.entries(data)
@@ -13,20 +10,20 @@ const generateKey = axiosInstance => {
   return `${url}&&${jsonToString(params)}&&${jsonToString(data)}`;
 };
 
-export const cancelPendingRequest = (axiosInstance, cancelToken) => {
+export const cancelPendingRequest = (cache, axiosInstance, cancelToken) => {
   const key = generateKey(axiosInstance);
 
   //cancel all request
-  Object.entries(cache).map(([key, cancel]) => {
+  Object.entries(cache.current || {}).map(([key, cancel]) => {
     if (typeof cancel === 'function') {
       //cancel request
       cancel();
 
       //clean up cache
-      delete cache[key];
+      delete cache.current[key];
     }
   });
 
   //add new request to queque
-  cache[key] = cancelToken;
+  cache.current[key] = cancelToken;
 };
